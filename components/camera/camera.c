@@ -42,6 +42,9 @@
 #if CONFIG_OV7725_SUPPORT
 #include "ov7725.h"
 #endif
+// #if CONFIG_OV7725_SUPPORT
+#include "ov7670.h"
+// #endif
 
 #define ENABLE_TEST_PATTERN CONFIG_ENABLE_TEST_PATTERN
 
@@ -175,6 +178,12 @@ esp_err_t camera_probe(const camera_config_t* config, camera_model_t* out_camera
             ov7725_init(&s_state->sensor);
             break;
 #endif
+// #if CONFIG_OV7670_SUPPORT
+        case OV7670_PID:
+            *out_camera_model = CAMERA_OV7670;
+            ov7670_init(&s_state->sensor);
+            break;
+// #endif
         default:
             id->PID = 0;
             *out_camera_model = CAMERA_UNKNOWN;
@@ -239,8 +248,8 @@ esp_err_t camera_init(const camera_config_t* config)
         s_state->in_bytes_per_pixel = 2;       // camera sends YUYV
         s_state->fb_bytes_per_pixel = 1;       // frame buffer stores Y8
     } else if (pix_format == PIXFORMAT_RGB565) {
-        if (s_state->sensor.id.PID != OV7725_PID) {
-            ESP_LOGE(TAG, "RGB565 format is only supported for ov7225");
+        if (s_state->sensor.id.PID != OV7725_PID || s_state->sensor.id.PID != OV7670_PID) {
+            ESP_LOGE(TAG, "RGB565 format is only supported for ov7225 and ov7670");
             err = ESP_ERR_NOT_SUPPORTED;
             goto fail;
         }

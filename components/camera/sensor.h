@@ -14,6 +14,7 @@
 #define OV9650_PID     (0x96)
 #define OV2640_PID     (0x26)
 #define OV7725_PID     (0x77)
+#define OV7670_PID     (0x76)
 
 
 typedef struct {

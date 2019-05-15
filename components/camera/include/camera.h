@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 typedef enum {
-    CAMERA_PF_RGB565 = 0,       //!< RGB, 2 bytes per pixel (not implemented)
+    CAMERA_PF_RGB565 = 0,       //!< RGB, 2 bytes per pixel
     CAMERA_PF_YUV422 = 1,       //!< YUYV, 2 bytes per pixel (not implemented)
     CAMERA_PF_GRAYSCALE = 2,    //!< 1 byte per pixel
     CAMERA_PF_JPEG = 3,         //!< JPEG compressed
@@ -40,6 +40,7 @@ typedef enum {
     CAMERA_UNKNOWN = 1,
     CAMERA_OV7725 = 7725,
     CAMERA_OV2640 = 2640,
+    CAMERA_OV7670 = 7670,
 } camera_model_t;
 
 typedef struct {
