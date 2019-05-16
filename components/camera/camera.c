@@ -232,8 +232,8 @@ esp_err_t camera_init(const camera_config_t* config)
 #endif
 
     if (pix_format == PIXFORMAT_GRAYSCALE) {
-        if (s_state->sensor.id.PID != OV7725_PID) {
-            ESP_LOGE(TAG, "Grayscale format is only supported for ov7225");
+        if (s_state->sensor.id.PID != OV7725_PID && s_state->sensor.id.PID != OV7670_PID) {
+            ESP_LOGE(TAG, "Grayscale format is only supported for ov7225 and ov7670");
             err = ESP_ERR_NOT_SUPPORTED;
             goto fail;
         }
@@ -301,6 +301,7 @@ esp_err_t camera_init(const camera_config_t* config)
             s_state->width, s_state->height);
 
     ESP_LOGD(TAG, "Allocating frame buffer (%d bytes)", s_state->fb_size);
+    ESP_LOGD(TAG, "Available RAM: %d; Largest block: %d", heap_caps_get_free_size(0), heap_caps_get_largest_free_block(0));
     s_state->fb = (uint8_t*) calloc(s_state->fb_size, 1);
     if (s_state->fb == NULL) {
         ESP_LOGE(TAG, "Failed to allocate frame buffer");

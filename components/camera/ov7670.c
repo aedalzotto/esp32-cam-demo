@@ -49,6 +49,9 @@ static int set_pixformat(sensor_t *sensor, pixformat_t pixformat)
             break;
         case PIXFORMAT_YUV422:
         case PIXFORMAT_GRAYSCALE:
+            reg7 =  COM7_SET_FMT(reg7, COM7_FMT_YUV);
+            reg15 = COM15_SET_FMT(reg15, COM15_FMT_YUV);
+            break;
         default:
             return -1;
     }

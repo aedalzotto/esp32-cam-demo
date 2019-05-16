@@ -111,9 +111,11 @@ void app_main()
         camera_config.frame_size = CAMERA_FRAME_SIZE;
         camera_config.jpeg_quality = 15;
     } else if (camera_model == CAMERA_OV7670) {
-        ESP_LOGI(TAG, "Detected OV7670 camera, using RGB565 format");
-        s_pixel_format = CAMERA_PF_RGB565;
+        s_pixel_format = CAMERA_PIXEL_FORMAT;
         camera_config.frame_size = CAMERA_FRAME_SIZE;
+        ESP_LOGI(TAG, "Detected OV7670 camera, using %s bitmap format",
+                CAMERA_PIXEL_FORMAT == CAMERA_PF_GRAYSCALE ?
+                        "grayscale" : "RGB565");
     } else {
         ESP_LOGE(TAG, "Camera not supported");
         return;

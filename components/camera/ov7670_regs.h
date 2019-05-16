@@ -23,6 +23,7 @@
 #define COM7                    0x12 /* Common Control 7         	*/
 #define COM7_RESET              0x80 /* SCCB Register Reset      	*/
 #define COM7_FMT_RGB            0x04 /* Output format RGB        	*/
+#define COM7_FMT_YUV            0x00 /* Output format YUV422      	*/
 #define COM7_RES_VGA            0x00 /* Resolution VGA           	*/
 #define COM7_RES_CIF            0x20
 #define COM7_RES_QVGA           0x10 /* Resolution QVGA          	*/
@@ -38,6 +39,7 @@
 
 #define COM15					0x40 /* Common Control 15		 	*/
 #define COM15_FMT_RGB565		0x10 /* RGB output format RGB565 	*/
+#define COM15_FMT_YUV			0x00 /* Default output mode 	 	*/
 #define COM15_SET_FMT(r, x)     ((r&0xCF)|(x&0x48))
 
 #define COM17					0x42
