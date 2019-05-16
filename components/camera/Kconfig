@@ -24,5 +24,12 @@ config OV7725_SUPPORT
 	help
 		Enable this option if you want to use the OV7725.
 		Disable this option to safe memory.
-	
+
+config OV7670_SUPPORT
+	bool "OV7670 Support"
+	default y
+	help
+		Enable this option if you want to use the OV7670.
+		Disable this option to safe memory.
+
 endmenu
