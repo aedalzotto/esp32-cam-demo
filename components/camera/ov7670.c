@@ -19,16 +19,33 @@
 #include "ov7670.h"
 #include "ov7670_regs.h"
 #include <stdio.h>
+#include <esp_log.h>
+
+static const uint8_t default_regs[][2] = {
+    {COM11,     COM11_AUTO_HZ | COM11_EXP_LESS}, // /enable auto 50/60Hz detect + exposure timing can be less...
+    {RSVD_COLOR,                          0x84}, // no clue what this is but it's most important for colors
+    {COM8,                                0xE7}, // AWB ON
+    {AWBCTR0,                             0x9f}, // Simple AWB
+    {COM10,                               0x02}, // VSYNC NEG
+
+    {0x00,          0x00},
+};
 
 static int reset(sensor_t *sensor)
 {
+    int i=0;
+    const uint8_t (*regs)[2];
+
     // Reset all registers
     SCCB_Write(sensor->slv_addr, COM7, COM7_RESET);
 
     // Delay 10 ms
     systick_sleep(10);
 
-    // no need to write default registers
+    // Write default regsiters
+    for (i=0, regs = default_regs; regs[i][0]; i++) {
+        SCCB_Write(sensor->slv_addr, regs[i][0], regs[i][1]);
+    }
 
     // Delay
     systick_sleep(30);
@@ -66,29 +83,108 @@ static int set_pixformat(sensor_t *sensor, pixformat_t pixformat)
     return ret;
 }
 
+static int frame_control(sensor_t *sensor, int hStart, int hStop, int vStart, int vStop)
+{
+    int ret = 0;
+    ret |= SCCB_Write(sensor->slv_addr, HSTART, hStart >> 3);
+    ret |= SCCB_Write(sensor->slv_addr, HSTOP, hStop >> 3);
+    ret |= SCCB_Write(sensor->slv_addr, HREF, ((hStop & 0b111) << 3) | (hStart & 0b111));
+
+    ret |= SCCB_Write(sensor->slv_addr, VSTART, vStart >> 2);
+    ret |= SCCB_Write(sensor->slv_addr, VSTOP, vStop >> 2);
+    ret |= SCCB_Write(sensor->slv_addr, VREF, ((vStop & 0b11) << 2) | (vStart & 0b11));
+
+    return ret;
+}
+
+static int saturation(sensor_t *sensor, int s)
+{
+    int ret = 0;
+    ret |= SCCB_Write(sensor->slv_addr, 0x4f, 0x80 + 0x20 * s);
+    ret |= SCCB_Write(sensor->slv_addr, 0x50, 0x80 + 0x20 * s);
+    ret |= SCCB_Write(sensor->slv_addr, 0x51, 0x00);
+    ret |= SCCB_Write(sensor->slv_addr, 0x52, 0x22 + (0x11 * s) / 2);
+    ret |= SCCB_Write(sensor->slv_addr, 0x53, 0x5e + (0x2f * s) / 2);
+    ret |= SCCB_Write(sensor->slv_addr, 0x54, 0x80 + 0x20 * s);
+    ret |= SCCB_Write(sensor->slv_addr, 0x58, 0x9e);
+
+    return ret;
+}
+
 static int set_framesize(sensor_t *sensor, framesize_t framesize)
 {
     int ret=0;
-    uint8_t reg7 = SCCB_Read(sensor->slv_addr, COM7);
+    uint8_t reg = 0;
 
     switch(framesize){
     case FRAMESIZE_VGA:
-        reg7 = COM7_SET_RES(reg7, COM7_RES_VGA);
+        reg = SCCB_Read(sensor->slv_addr, COM7);
+        reg = COM7_SET_RES(reg, COM7_RES_VGA);
+        ret |= SCCB_Write(sensor->slv_addr, COM7, reg);
+
+        reg = SCCB_Read(sensor->slv_addr, COM14);
+        reg = COM14_SET_SCALE(reg, false);
+        ret |= SCCB_Write(sensor->slv_addr, COM14, reg);
+
+        reg = SCCB_Read(sensor->slv_addr, TSLB);
+        reg = TSLB_SET_RESIZE(reg, true);
+        ret |= SCCB_Write(sensor->slv_addr, TSLB, reg);
         break;
     case FRAMESIZE_QVGA:
-        reg7 = COM7_SET_RES(reg7, COM7_RES_QVGA);
+        reg = SCCB_Read(sensor->slv_addr, COM7);
+        reg = COM7_SET_RES(reg, COM7_RES_QVGA);
+        ret |= SCCB_Write(sensor->slv_addr, COM7, reg);
+
+        reg = SCCB_Read(sensor->slv_addr, COM14);
+        reg = COM14_SET_SCALE(reg, false);
+        ret |= SCCB_Write(sensor->slv_addr, COM14, reg);
+
+        reg = SCCB_Read(sensor->slv_addr, TSLB);
+        reg = TSLB_SET_RESIZE(reg, true);
+        ret |= SCCB_Write(sensor->slv_addr, TSLB, reg);
         break;
     case FRAMESIZE_CIF:
-        reg7 = COM7_SET_RES(reg7, COM7_RES_CIF);
+        reg = SCCB_Read(sensor->slv_addr, COM7);
+        reg = COM7_SET_RES(reg, COM7_RES_CIF);
+        ret |= SCCB_Write(sensor->slv_addr, COM7, reg);
+
+        reg = SCCB_Read(sensor->slv_addr, COM14);
+        reg = COM14_SET_SCALE(reg, false);
+        ret |= SCCB_Write(sensor->slv_addr, COM14, reg);
+
+        reg = SCCB_Read(sensor->slv_addr, TSLB);
+        reg = TSLB_SET_RESIZE(reg, true);
+        ret |= SCCB_Write(sensor->slv_addr, TSLB, reg);
         break;
     case FRAMESIZE_QCIF:
-        reg7 = COM7_SET_RES(reg7, COM7_RES_QCIF);
+        reg = SCCB_Read(sensor->slv_addr, COM7);
+        reg = COM7_SET_RES(reg, COM7_RES_QCIF);
+        ret |= SCCB_Write(sensor->slv_addr, COM7, reg);
+
+        reg = SCCB_Read(sensor->slv_addr, COM14);
+        reg = COM14_SET_SCALE(reg, false);
+        ret |= SCCB_Write(sensor->slv_addr, COM14, reg);
+
+        reg = SCCB_Read(sensor->slv_addr, TSLB);
+        reg = TSLB_SET_RESIZE(reg, true);
+        ret |= SCCB_Write(sensor->slv_addr, TSLB, reg);
+        break;
+    case FRAMESIZE_QQVGA:
+        ret |= SCCB_Write(sensor->slv_addr, COM3, COM3_DCW_EN);
+        ret |= SCCB_Write(sensor->slv_addr, COM14, COM14_PCLK_DIV_4 | COM14_SCALE_MAN | COM14_SCALE_PCLK);
+        ret |= SCCB_Write(sensor->slv_addr, SCALING_XSC, 0x3A);
+        ret |= SCCB_Write(sensor->slv_addr, SCALING_YSC, 0x35);
+
+        ret |= SCCB_Write(sensor->slv_addr, SCALING_DCWCTR, 0x22);      //downsample by 4
+        ret |= SCCB_Write(sensor->slv_addr, SCALING_PCLK_DIV, 0xF2);    //pixel clock divided by 4
+        ret |= SCCB_Write(sensor->slv_addr, SCALING_PCLK_DELAY, 0x02);
+
+        ret |= frame_control(sensor, 196, 52, 8, 488);
+        ret |= saturation(sensor, 0);
         break;
     default:
         return -1;
-    }
-
-    ret = SCCB_Write(sensor->slv_addr, COM7, reg7);
+    }    
 
     // Delay
     systick_sleep(30);

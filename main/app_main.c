@@ -54,8 +54,8 @@ const int CONNECTED_BIT = BIT0;
 static ip4_addr_t s_ip_addr;
 static camera_pixelformat_t s_pixel_format;
 
-#define CAMERA_PIXEL_FORMAT CAMERA_PF_GRAYSCALE
-#define CAMERA_FRAME_SIZE CAMERA_FS_QVGA
+#define CAMERA_PIXEL_FORMAT CAMERA_PF_RGB565
+#define CAMERA_FRAME_SIZE CAMERA_FS_QQVGA
 
 
 void app_main()
@@ -71,26 +71,25 @@ void app_main()
 
     ESP_ERROR_CHECK(gpio_install_isr_service(0));
 
-    camera_config_t camera_config = {
-        .ledc_channel = LEDC_CHANNEL_0,
-        .ledc_timer = LEDC_TIMER_0,
-        .pin_d0 = CONFIG_D0,
-        .pin_d1 = CONFIG_D1,
-        .pin_d2 = CONFIG_D2,
-        .pin_d3 = CONFIG_D3,
-        .pin_d4 = CONFIG_D4,
-        .pin_d5 = CONFIG_D5,
-        .pin_d6 = CONFIG_D6,
-        .pin_d7 = CONFIG_D7,
-        .pin_xclk = CONFIG_XCLK,
-        .pin_pclk = CONFIG_PCLK,
-        .pin_vsync = CONFIG_VSYNC,
-        .pin_href = CONFIG_HREF,
-        .pin_sscb_sda = CONFIG_SDA,
-        .pin_sscb_scl = CONFIG_SCL,
-        .pin_reset = CONFIG_RESET,
-        .xclk_freq_hz = CONFIG_XCLK_FREQ,
-    };
+    camera_config_t camera_config = {};
+    camera_config.ledc_channel = LEDC_CHANNEL_0;
+    camera_config.ledc_timer = LEDC_TIMER_0;
+    camera_config.pin_d0 = CONFIG_D0;
+    camera_config.pin_d1 = CONFIG_D1;
+    camera_config.pin_d2 = CONFIG_D2;
+    camera_config.pin_d3 = CONFIG_D3;
+    camera_config.pin_d4 = CONFIG_D4;
+    camera_config.pin_d5 = CONFIG_D5;
+    camera_config.pin_d6 = CONFIG_D6;
+    camera_config.pin_d7 = CONFIG_D7;
+    camera_config.pin_xclk = CONFIG_XCLK;
+    camera_config.pin_pclk = CONFIG_PCLK;
+    camera_config.pin_vsync = CONFIG_VSYNC;
+    camera_config.pin_href = CONFIG_HREF;
+    camera_config.pin_sscb_sda = CONFIG_SDA;
+    camera_config.pin_sscb_scl = CONFIG_SCL;
+    camera_config.pin_reset = CONFIG_RESET;
+    camera_config.xclk_freq_hz = CONFIG_XCLK_FREQ;
 
     camera_model_t camera_model;
     err = camera_probe(&camera_config, &camera_model);
